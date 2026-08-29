@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Stage 1: Booking Request - CineWave{% endblock %}
+
+{% block content %}
+<!-- Pega Case Stage Lifecycle Tracker -->
+<div class="stage-tracker">
+    <div class="stage-step active">
+        <div class="stage-icon">1</div>
+        <div class="stage-label">Booking Request</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">2</div>
+        <div class="stage-label">Availability Check</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">3</div>
+        <div class="stage-label">Customer Confirmation</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">4</div>
+        <div class="stage-label">Booking Processing</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">5</div>
+        <div class="stage-label">Confirmed & Notified</div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Form Column -->
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header card-header-orange d-flex justify-content-between align-items-center">
+                <span>Capture Booking Details (pyWorkPage)</span>
+                <span class="badge bg-secondary">Status: New</span>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('new_booking') }}" method="POST" id="booking-request-form">
+                    
+                    <!-- Section: Booking Details -->
+                    <h5 class="border-bottom pb-2 mb-3 text-orange"><i class="fa-solid fa-circle-info me-2"></i>Booking Details</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="movie_select" class="form-label">Select Movie <span class="text-danger">*</span></label>
+                            <select class="form-select" id="movie_select" name="movie_id" required>
+                                <option value="">-- Choose Movie --</option>
+                                {% for movie in movies %}
+                                <option value="{{ movie['MovieID'] }}" {% if form_data.get('movie_id') == movie['MovieID'] or request.args.get('movie_id') == movie['MovieID'] %}selected{% endif %}>
+                                    {{ movie['Title'] }} ({{ movie['Rating'] }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="theatre_select" class="form-label">Select Theatre <span class="text-danger">*</span></label>
+                            <select class="form-select" id="theatre_select" name="theatre_id" required>
+                                <option value="">-- Choose Theatre --</option>
+                                {% for theatre in theatres %}
+                                <option value="{{ theatre['TheatreID'] }}" {% if form_data.get('theatre_id') == theatre['TheatreID'] %}selected{% endif %}>
+                                    {{ theatre['TheatreName'] }} ({{ theatre['Location'] }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="show_select" class="form-label">Select Show Date & Time <span class="text-danger">*</span></label>
+                            <select class="form-select" id="show_select" name="show_id" required>
+                                <option value="">-- Select Show --</option>
+                                {% for show in shows %}
+                                <option value="{{ show['ShowID'] }}" 
+                                        data-movie-id="{{ show['MovieID'] }}" 
+                                        data-theatre-id="{{ show['TheatreID'] }}"
+                                        data-available-seats="{{ show['AvailableSeats'] }}"
+                                        {% if form_data.get('show_id') == show['ShowID'] %}selected{% endif %}>
+                                    {{ show['ShowDate'] }} at {{ show['ShowTime'] }} ({{ show['ScreenName'] }} - {{ show['AvailableSeats'] }} seats left)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="ticket_count" class="form-label">Number of Tickets <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="ticket_count" name="ticket_count" min="1" max="10" value="{{ form_data.get('ticket_count', 1) }}" required>
+                            <div class="form-text">Max 10 tickets per booking.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section: Customer Info -->
+                    <h5 class="border-bottom pb-2 my-4 text-orange"><i class="fa-solid fa-user me-2"></i>Customer Information</h5>
+                    
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" placeholder="John Doe" value="{{ form_data.get('full_name', '') }}" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="john@example.com" value="{{ form_data.get('email', '') }}" required>
+                            <div class="form-text">Used for sending booking confirmation email.</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="+1234567890" value="{{ form_data.get('phone', '') }}">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Submit Booking Request <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const movieSelect = document.getElementById("movie_select");
+    const theatreSelect = document.getElementById("theatre_select");
+    const showSelect = document.getElementById("show_select");
+    const allOptions = Array.from(showSelect.options).slice(1); // skip placeholder
+
+    function filterShows() {
+        const selectedMovie = movieSelect.value;
+        const selectedTheatre = theatreSelect.value;
+        
+        // Reset show selection
+        showSelect.value = "";
+        
+        // Remove all current options except placeholder
+        while (showSelect.options.length > 1) {
+            showSelect.remove(1);
+        }
+        
+        // Re-add options matching criteria
+        allOptions.forEach(opt => {
+            const matchesMovie = !selectedMovie || opt.getAttribute("data-movie-id") === selectedMovie;
+            const matchesTheatre = !selectedTheatre || opt.getAttribute("data-theatre-id") === selectedTheatre;
+            
+            if (matchesMovie && matchesTheatre) {
+                showSelect.add(opt);
+            }
+        });
+    }
+
+    movieSelect.addEventListener("change", filterShows);
+    theatreSelect.addEventListener("change", filterShows);
+    
+    // Initial run
+    if (movieSelect.value || theatreSelect.value) {
+        filterShows();
+    }
+});
+</script>
+{% endblock %}

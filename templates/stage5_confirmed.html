@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Case Resolution - CineWave{% endblock %}
+
+{% block content %}
+<!-- Pega Case Stage Lifecycle Tracker -->
+<div class="stage-tracker">
+    {% if booking['BookingStatus'] == 'Resolved-Completed' %}
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Booking Request</div>
+        </div>
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Availability Check</div>
+        </div>
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Customer Confirmation</div>
+        </div>
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Booking Processing</div>
+        </div>
+        <div class="stage-step active">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Confirmed & Notified</div>
+        </div>
+    {% else %}
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Booking Request</div>
+        </div>
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Availability Check</div>
+        </div>
+        <div class="stage-step completed">
+            <div class="stage-icon">✓</div>
+            <div class="stage-label">Customer Confirmation</div>
+        </div>
+        <div class="stage-step terminal-failed">
+            <div class="stage-icon"><i class="fa-solid fa-ban"></i></div>
+            <div class="stage-label">{{ booking['BookingStatus'] }}</div>
+        </div>
+        <div class="stage-step">
+            <div class="stage-icon">5</div>
+            <div class="stage-label">Resolution</div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        
+        <!-- Resolution Banner -->
+        {% if booking['BookingStatus'] == 'Resolved-Completed' %}
+            <div class="alert alert-success border-success shadow-sm mb-4">
+                <h4 class="alert-heading"><i class="fa-solid fa-circle-check me-2"></i>Booking Completed Successfully!</h4>
+                <p class="mb-0">The booking has been finalized. Seat inventory is updated and booking reference <strong>{{ booking['BookingReference'] }}</strong> is generated.</p>
+            </div>
+            
+            <!-- Movie Ticket layout -->
+            <div class="ticket-container mt-2">
+                <div class="ticket-header">
+                    <h4 class="mb-0">CINEWAVE ENTERTAINMENT</h4>
+                    <span class="small font-monospace">TICKET REFERENCE: {{ booking['BookingReference'] }}</span>
+                </div>
+                <div class="ticket-body">
+                    <h4 class="text-orange font-weight-bold mb-2">{{ booking['MovieTitle'] }}</h4>
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot me-1"></i>{{ booking['TheatreName'] }} | <strong>{{ booking['ScreenName'] }}</strong></p>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <span class="text-muted small d-block">SHOWTIME</span>
+                            <strong>{{ booking['ShowDate'] }}</strong> at <strong>{{ booking['ShowTime'] }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">TICKETS</span>
+                            <strong>{{ booking['NumberOfTickets'] }} Seat(s)</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <span class="text-muted small d-block">SEATS SELECTIONS</span>
+                            {% for seat in booking['SelectedSeats'] %}
+                            <span class="badge bg-orange me-1">{{ seat['SeatNumber'] }} ({{ seat['SeatCategory'] }})</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row border-top pt-3 align-items-center">
+                        <div class="col-6">
+                            <span class="text-muted small d-block">TOTAL PRICE</span>
+                            <span class="fs-4 text-orange font-weight-bold">${{ booking['TotalAmount']|round(2) }}</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="badge bg-success py-2 px-3 text-uppercase">Paid</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <div class="barcode-placeholder"></div>
+                        <span class="text-muted small mt-1 d-block">Scan at cinema entry</span>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-danger border-danger shadow-sm mb-4">
+                <h4 class="alert-heading"><i class="fa-solid fa-circle-xmark me-2"></i>Case Resolved: Alternate Path</h4>
+                <p class="mb-0">This booking request was closed with status: <strong>{{ booking['BookingStatus'] }}</strong>.</p>
+                {% if booking['BookingStatus'] == 'Resolved-NoAvailability' %}
+                    <p class="mt-2 mb-0 small">Reason: Show date has expired, screen is inactive, or requested seat category was sold out.</p>
+                {% elif booking['BookingStatus'] == 'Resolved-Declined' %}
+                    <p class="mt-2 mb-0 small">Reason: Customer explicitly declined the details before finalizing.</p>
+                {% elif booking['BookingStatus'] == 'Resolved-PaymentFailed' %}
+                    <p class="mt-2 mb-0 small">Reason: Payment authorization failed or timed out. Seats were returned to active inventory.</p>
+                {% endif %}
+            </div>
+            
+            <div class="card shadow-sm border-0 mb-4 p-4 text-center">
+                <i class="fa-solid fa-folder-closed fa-3x text-muted mb-3"></i>
+                <h5>Case History Logged</h5>
+                <p class="text-muted small">All locked records and held resources have been released according to rules.</p>
+                <div class="mt-2">
+                    <a href="{{ url_for('new_booking') }}" class="btn btn-outline-warning text-orange border-orange">Start New Booking</a>
+                </div>
+            </div>
+        {% endif %}
+        
+    </div>
+
+    <!-- Pega Correspondence Notifications Log -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <i class="fa-solid fa-envelope-open-text me-2 text-warning"></i>Simulated Pega Correspondence Log
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">These automated notification letters were generated by the case lifecycle rules (`Notify` activities / correspondence templates) and dispatched to `{{ booking['Email'] }}`:</p>
+                
+                {% for notif in notifications %}
+                <div class="border rounded p-3 mb-2 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge bg-orange">{{ notif['Channel'] }}</span>
+                        <span class="text-muted small font-monospace">{{ notif['SentDateTime'] }}</span>
+                    </div>
+                    
+                    <p class="mb-0 small text-dark fw-semibold mt-1">
+                        {% if booking['BookingStatus'] == 'Resolved-Completed' and loop.first %}
+                            Notification: BookingConfirmationEmail (Stage 5)
+                        {% elif booking['BookingStatus'] == 'Resolved-Declined' and loop.first %}
+                            Notification: BookingNotConfirmedEmail (Alternate path)
+                        {% elif booking['BookingStatus'] == 'Resolved-NoAvailability' and loop.first %}
+                            Notification: NoAvailabilityEmail (Alternate path)
+                        {% elif booking['BookingStatus'] == 'Resolved-PaymentFailed' and loop.first %}
+                            Notification: BookingNotConfirmedEmail (Alternate path)
+                        {% elif notif['BookingID'] and 'Confirmation' in notif['SentDateTime'] or loop.index == 2 %}
+                            Notification: ConfirmBookingRequestEmail (Stage 3 entry)
+                        {% else %}
+                            Notification: BookingRequestReceivedEmail (Stage 1 exit)
+                        {% endif %}
+                    </p>
+                    
+                    <div class="mt-2 p-2 bg-white rounded border font-monospace small" style="white-space: pre-wrap; font-size: 11px;">
+                        {% if booking['BookingStatus'] == 'Resolved-Completed' and loop.first %}
+Dear {{ booking['FullName'] }},
+
+Booking Confirmed! Reference: {{ booking['BookingReference'] }}.
+Movie: {{ booking['MovieTitle'] }}
+Theatre: {{ booking['TheatreName'] }}
+Screen: {{ booking['ScreenName'] }}
+Seats: {% for seat in booking['SelectedSeats'] %}{{ seat['SeatNumber'] }}{% if not loop.last %}, {% endif %}{% endfor %}
+Date: {{ booking['ShowDate'] }} at {{ booking['ShowTime'] }}
+Total Paid: ${{ booking['TotalAmount']|round(2) }}
+
+Enjoy your show!
+CineWave Team
+                        {% elif booking['BookingStatus'] == 'Resolved-Declined' and loop.first or booking['BookingStatus'] == 'Resolved-PaymentFailed' and loop.first %}
+Dear {{ booking['FullName'] }},
+
+Your booking request has been declined or failed. Any temporary hold on seats has been released.
+
+Best regards,
+CineWave Team
+                        {% elif booking['BookingStatus'] == 'Resolved-NoAvailability' and loop.first %}
+Dear {{ booking['FullName'] }},
+
+We are sorry to inform you that seats are no longer available for your selected show. Your booking has been cancelled.
+
+Best regards,
+CineWave Team
+                        {% elif loop.index == 2 or (booking['BookingStatus'] == 'Resolved-Completed' and loop.index == 2) %}
+Dear {{ booking['FullName'] }},
+
+Your seats are temporarily held. Please confirm your booking within 30 minutes: {{ booking['BookingID'].split('-')[0].upper() }}.
+
+Best regards,
+CineWave Team
+                        {% else %}
+Dear {{ booking['FullName'] }},
+
+We have received your booking request (ID: {{ booking['BookingID'].split('-')[0].upper() }}). Your case is in Stage 1.
+
+Best regards,
+CineWave Team
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No notifications generated.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

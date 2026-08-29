@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Stage 4: Processing Payment - CineWave{% endblock %}
+
+{% block content %}
+<!-- Pega Case Stage Lifecycle Tracker -->
+<div class="stage-tracker">
+    <div class="stage-step completed">
+        <div class="stage-icon">✓</div>
+        <div class="stage-label">Booking Request</div>
+    </div>
+    <div class="stage-step completed">
+        <div class="stage-icon">✓</div>
+        <div class="stage-label">Availability Check</div>
+    </div>
+    <div class="stage-step completed">
+        <div class="stage-icon">✓</div>
+        <div class="stage-label">Customer Confirmation</div>
+    </div>
+    <div class="stage-step active">
+        <div class="stage-icon">4</div>
+        <div class="stage-label">Booking Processing</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">5</div>
+        <div class="stage-label">Confirmed & Notified</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header card-header-orange d-flex justify-content-between align-items-center">
+                <span>Capture Payment Details (Stage 4)</span>
+                <span class="badge {{ booking['BookingStatus']|status_badge }}">{{ booking['BookingStatus'] }}</span>
+            </div>
+            
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h5 class="text-orange"><i class="fa-solid fa-credit-card me-2"></i>Secure Checkout Simulation</h5>
+                    <p class="text-muted small">Total amount due: <strong>${{ booking['TotalAmount']|round(2) }}</strong></p>
+                </div>
+                
+                <div class="border rounded p-3 bg-light mb-4">
+                    <h6 class="mb-2">Booking Summary:</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li><strong>Movie:</strong> {{ booking['MovieTitle'] }}</li>
+                        <li><strong>Seats:</strong> 
+                            {% for seat in booking['SelectedSeats'] %}
+                            {{ seat['SeatNumber'] }} ({{ seat['SeatCategory'] }}){% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </li>
+                        <li><strong>Tickets:</strong> {{ booking['NumberOfTickets'] }} ticket(s)</li>
+                    </ul>
+                </div>
+                
+                <!-- Mock Payment Form -->
+                <form action="{{ url_for('process_booking', booking_id=booking['BookingID']) }}" method="POST">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Method</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="payment_method" id="pay_card" value="card" checked>
+                            <label class="form-check-input-label" for="pay_card">
+                                <i class="fa-solid fa-credit-card me-2 text-orange"></i>Credit / Debit Card
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="payment_method" id="pay_upi" value="upi">
+                            <label class="form-check-input-label" for="pay_upi">
+                                <i class="fa-solid fa-mobile-screen-button me-2 text-orange"></i>UPI / Digital Wallet
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="card_num" class="form-label">Card/Account Number (Mock)</label>
+                        <input type="text" class="form-control" id="card_num" placeholder="XXXX - XXXX - XXXX - 1234" value="4111 2222 3333 4444" disabled>
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <p class="small text-muted text-center"><i class="fa-solid fa-circle-question me-1 text-orange"></i>Select a simulation path to test different terminal states:</p>
+                        
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="submit" name="payment_status" value="failure" class="btn btn-outline-danger w-100 py-2">
+                                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Simulate Failure
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button type="submit" name="payment_status" value="success" class="btn btn-primary w-100 py-2">
+                                    <i class="fa-solid fa-shield-halved me-2"></i>Simulate Success
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

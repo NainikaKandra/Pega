@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Stage 3: Confirm Booking - CineWave{% endblock %}
+
+{% block content %}
+<!-- Pega Case Stage Lifecycle Tracker -->
+<div class="stage-tracker">
+    <div class="stage-step completed">
+        <div class="stage-icon">✓</div>
+        <div class="stage-label">Booking Request</div>
+    </div>
+    <div class="stage-step completed">
+        <div class="stage-icon">✓</div>
+        <div class="stage-label">Availability Check</div>
+    </div>
+    <div class="stage-step active">
+        <div class="stage-icon">3</div>
+        <div class="stage-label">Customer Confirmation</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">4</div>
+        <div class="stage-label">Booking Processing</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">5</div>
+        <div class="stage-label">Confirmed & Notified</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        
+        <!-- SLA Timer Alert -->
+        <div class="alert alert-warning border-warning shadow-sm mb-4 d-flex align-items-center justify-content-between">
+            <div>
+                <i class="fa-solid fa-hourglass-half me-2 fs-5 text-warning-emphasis"></i>
+                <span><strong>SLA Rule active:</strong> Seats are held temporarily. Remaining hold time: <strong>{{ time_remaining_min }} minutes</strong>.</span>
+            </div>
+            <!-- Test helper to simulate SLA timeout -->
+            <form action="{{ url_for('trigger_manual_expiry', booking_id=booking['BookingID']) }}" method="POST" class="m-0">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Simulate 30 min SLA Timeout and release seats">
+                    <i class="fa-solid fa-clock-rotate-left me-1"></i>Force SLA Expiry
+                </button>
+            </form>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header card-header-orange d-flex justify-content-between align-items-center">
+                <span>Confirm Booking Summary (read-only view)</span>
+                <span class="badge {{ booking['BookingStatus']|status_badge }}">{{ booking['BookingStatus'] }}</span>
+            </div>
+            
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h3 class="text-orange font-weight-bold mb-1">CineWave Ticket</h3>
+                    <p class="text-muted small">Please verify details before finalizing payment.</p>
+                </div>
+                
+                <table class="table table-borderless align-middle mb-4 bg-light rounded p-3 d-block">
+                    <tbody>
+                        <tr class="d-flex flex-wrap border-bottom pb-2 mb-2">
+                            <td class="col-4 text-muted fw-semibold">Case Reference:</td>
+                            <td class="col-8 fw-bold">{{ booking['BookingID'].split('-')[0].upper() }}</td>
+                        </tr>
+                        <tr class="d-flex flex-wrap border-bottom pb-2 mb-2">
+                            <td class="col-4 text-muted fw-semibold">Movie Title:</td>
+                            <td class="col-8 fw-bold text-orange fs-5">{{ booking['MovieTitle'] }}</td>
+                        </tr>
+                        <tr class="d-flex flex-wrap border-bottom pb-2 mb-2">
+                            <td class="col-4 text-muted fw-semibold">Theatre & Screen:</td>
+                            <td class="col-8">{{ booking['TheatreName'] }} | <strong class="text-dark">{{ booking['ScreenName'] }}</strong></td>
+                        </tr>
+                        <tr class="d-flex flex-wrap border-bottom pb-2 mb-2">
+                            <td class="col-4 text-muted fw-semibold">Show Date & Time:</td>
+                            <td class="col-8 fw-semibold"><i class="fa-regular fa-calendar-days me-1"></i>{{ booking['ShowDate'] }} at <i class="fa-regular fa-clock me-1"></i>{{ booking['ShowTime'] }}</td>
+                        </tr>
+                        <tr class="d-flex flex-wrap border-bottom pb-2 mb-2">
+                            <td class="col-4 text-muted fw-semibold">Customer Details:</td>
+                            <td class="col-8">{{ booking['FullName'] }} ({{ booking['Email'] }})</td>
+                        </tr>
+                        <tr class="d-flex flex-wrap border-bottom pb-2 mb-2">
+                            <td class="col-4 text-muted fw-semibold">Seats Selected:</td>
+                            <td class="col-8">
+                                {% for seat in booking['SelectedSeats'] %}
+                                <span class="badge bg-dark me-1" title="Category: {{ seat['SeatCategory'] }}">
+                                    {{ seat['SeatNumber'] }} ({{ seat['SeatCategory'] }})
+                                </span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr class="d-flex flex-wrap pt-2">
+                            <td class="col-4 text-muted fw-semibold">Total Amount:</td>
+                            <td class="col-8"><h4 class="text-orange mb-0 font-weight-bold">${{ booking['TotalAmount']|round(2) }}</h4></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <form action="{{ url_for('confirm_booking', booking_id=booking['BookingID']) }}" method="POST">
+                    <div class="row pt-2">
+                        <div class="col-6">
+                            <button type="submit" name="action" value="decline" class="btn btn-outline-danger w-100 py-2">
+                                <i class="fa-solid fa-xmark me-2"></i>Decline & Release
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="submit" name="action" value="confirm" class="btn btn-primary w-100 py-2">
+                                <i class="fa-solid fa-check me-2"></i>Confirm Details <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

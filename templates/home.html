@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Home - CineWave Entertainment{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 font-weight-bold mb-3"><span class="text-orange">CineWave</span> Ticket Booking</h1>
+        <p class="lead text-muted">Experience the magic of cinema with the finest screens, high-fidelity audio, and comfortable seating. Book your tickets in three easy steps.</p>
+        <a href="{{ url_for('new_booking') }}" class="btn btn-primary btn-lg px-4 mt-2">
+            <i class="fa-solid fa-ticket me-2"></i>Book Movie Now
+        </a>
+    </div>
+</div>
+
+<h2 class="mb-4 text-center">Now Showing</h2>
+<div class="row">
+    {% for movie in movies %}
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <!-- Simulated poster box in orange gradient -->
+            <div class="card-img-top bg-orange text-white d-flex flex-column justify-content-center align-items-center" style="height: 180px; background: linear-gradient(135deg, #ff9100, #ff6f00);">
+                <i class="fa-solid fa-film fa-3x mb-2"></i>
+                <h5 class="px-3 text-center">{{ movie['Title'] }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-dark">{{ movie['Rating'] }}</span>
+                    <span class="text-muted small"><i class="fa-regular fa-clock me-1"></i>{{ movie['DurationMinutes'] }} min</span>
+                </div>
+                <p class="card-text text-muted small" style="min-height: 72px;">{{ movie['Description'] }}</p>
+                <ul class="list-unstyled mb-3 small">
+                    <li><strong>Genre:</strong> {{ movie['Genre'] }}</li>
+                    <li><strong>Language:</strong> {{ movie['Language'] }}</li>
+                </ul>
+            </div>
+            <div class="card-footer bg-white border-0 pb-3">
+                <a href="{{ url_for('new_booking', movie_id=movie['MovieID']) }}" class="btn btn-outline-warning w-100 text-orange border-orange">
+                    Select Movie
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">No movies currently showing. Use the Manager Portal to add movies.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

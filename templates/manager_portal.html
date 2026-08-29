@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Theatre Manager Portal - CineWave{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="text-orange font-weight-bold"><i class="fa-solid fa-gears me-2"></i>Theatre Manager Portal</h2>
+        <p class="text-muted">Maintain Movie, Theatre, and Show master data. Monitor inventory capacities per show.</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Config Forms Column -->
+    <div class="col-lg-5 mb-4">
+        
+        <!-- Add Movie Form Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <i class="fa-solid fa-film me-2 text-orange"></i>Add New Movie Record
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('manager') }}" method="POST">
+                    <input type="hidden" name="action" value="add_movie">
+                    
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label for="movie_id" class="form-label font-monospace small">MovieID (Key)</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="movie_id" name="movie_id" placeholder="M5" required>
+                        </div>
+                        <div class="col-md-7 mb-3">
+                            <label for="title" class="form-label small">Movie Title</label>
+                            <input type="text" class="form-control form-control-sm" id="title" name="title" placeholder="e.g. Gladiator II" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="genre" class="form-label small">Genre</label>
+                            <input type="text" class="form-control form-control-sm" id="genre" name="genre" placeholder="Action" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="language" class="form-label small">Language</label>
+                            <input type="text" class="form-control form-control-sm" id="language" name="language" placeholder="English" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="duration" class="form-label small">Duration (Mins)</label>
+                            <input type="number" class="form-control form-control-sm" id="duration" name="duration" placeholder="150" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="rating" class="form-label small">Rating</label>
+                            <select class="form-select form-select-sm" id="rating" name="rating" required>
+                                <option value="G">G</option>
+                                <option value="PG">PG</option>
+                                <option value="PG-13" selected>PG-13</option>
+                                <option value="R">R</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label small">Description</label>
+                        <textarea class="form-control form-control-sm" id="description" name="description" rows="2" placeholder="Brief synopsis..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-orange btn-sm text-white w-100">
+                        <i class="fa-solid fa-plus me-1"></i>Save Movie to DB
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Show Form Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <i class="fa-solid fa-calendar-plus me-2 text-orange"></i>Schedule Show & Create Seats
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('manager') }}" method="POST">
+                    <input type="hidden" name="action" value="add_show">
+                    
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label for="show_id" class="form-label font-monospace small">ShowID (Key)</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="show_id" name="show_id" placeholder="SH6" required>
+                        </div>
+                        <div class="col-md-7 mb-3">
+                            <label for="movie_select" class="form-label small">Movie</label>
+                            <select class="form-select form-select-sm" id="movie_select" name="movie_id" required>
+                                {% for movie in movies %}
+                                <option value="{{ movie['MovieID'] }}">{{ movie['Title'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="theatre_select" class="form-label small">Theatre</label>
+                            <select class="form-select form-select-sm" id="theatre_select" name="theatre_id" required>
+                                {% for theatre in theatres %}
+                                <option value="{{ theatre['TheatreID'] }}">{{ theatre['TheatreName'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="screen_select" class="form-label small">Screen (Layout)</label>
+                            <select class="form-select form-select-sm" id="screen_select" name="screen_id" required>
+                                {% for screen in screens %}
+                                <option value="{{ screen['ScreenID'] }}">{{ screen['ScreenName'] }} ({{ screen['TotalSeats'] }} seats)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="show_date" class="form-label small">Show Date</label>
+                            <input type="date" class="form-control form-control-sm" id="show_date" name="show_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="show_time" class="form-label small">Show Time</label>
+                            <input type="time" class="form-control form-control-sm" id="show_time" name="show_time" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="price" class="form-label small">Base Ticket Price ($)</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" id="price" name="price" value="12.00" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-orange btn-sm text-white w-100">
+                        <i class="fa-solid fa-calendar-check me-1"></i>Generate Show and Inventory
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Shows List Column -->
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header card-header-orange">
+                Schedule Dashboard & Capacity
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">ShowID</th>
+                                <th>Movie</th>
+                                <th>Theatre & Screen</th>
+                                <th>Date & Time</th>
+                                <th>Capacity</th>
+                                <th class="pe-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for show in shows %}
+                            <tr>
+                                <td class="ps-3 font-monospace fw-semibold">{{ show['ShowID'] }}</td>
+                                <td class="fw-semibold text-orange">{{ show['MovieTitle'] }}</td>
+                                <td>{{ show['TheatreName'] }} ({{ show['ScreenName'] }})</td>
+                                <td>{{ show['ShowDate'] }} at {{ show['ShowTime'] }}</td>
+                                <td>
+                                    {% set percent = ((show['AvailableSeats'] / show['TotalSeats']) * 100)|round|int %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="fw-bold me-2">{{ show['AvailableSeats'] }}/{{ show['TotalSeats'] }}</span>
+                                        <div class="progress" style="width: 60px; height: 6px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ percent }}%; background-color: var(--primary-color) !important;" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="pe-3">
+                                    <span class="badge bg-success">{{ show['ShowStatus'] }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No shows configured yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

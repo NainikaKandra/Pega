@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Stage 2: Seat Selection - CineWave{% endblock %}
+
+{% block content %}
+<!-- Pega Case Stage Lifecycle Tracker -->
+<div class="stage-tracker">
+    <div class="stage-step completed">
+        <div class="stage-icon">✓</div>
+        <div class="stage-label">Booking Request</div>
+    </div>
+    <div class="stage-step active">
+        <div class="stage-icon">2</div>
+        <div class="stage-label">Availability Check</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">3</div>
+        <div class="stage-label">Customer Confirmation</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">4</div>
+        <div class="stage-label">Booking Processing</div>
+    </div>
+    <div class="stage-step">
+        <div class="stage-icon">5</div>
+        <div class="stage-label">Confirmed & Notified</div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Show & Selection Info Column -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header card-header-orange">
+                Booking Information
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-orange font-weight-bold">{{ booking['MovieTitle'] }}</h5>
+                <p class="text-muted small">{{ booking['TheatreName'] }} ({{ booking['ScreenName'] }})</p>
+                <hr>
+                <ul class="list-unstyled mb-3">
+                    <li class="mb-2"><strong>Case ID:</strong> <span class="badge bg-dark">{{ booking['BookingID'].split('-')[0].upper() }}</span></li>
+                    <li class="mb-2"><strong>Status:</strong> <span class="badge {{ booking['BookingStatus']|status_badge }}">{{ booking['BookingStatus'] }}</span></li>
+                    <li class="mb-2"><strong>Show Date:</strong> {{ booking['ShowDate'] }}</li>
+                    <li class="mb-2"><strong>Show Time:</strong> {{ booking['ShowTime'] }}</li>
+                    <li class="mb-2"><strong>Base Ticket Price:</strong> ${{ booking['TicketPrice']|round(2) }}</li>
+                    <li class="mb-2"><strong>Requested Tickets:</strong> <span class="badge bg-orange px-2 fs-6">{{ booking['NumberOfTickets'] }}</span></li>
+                </ul>
+                <hr>
+                <div class="p-3 bg-light rounded border">
+                    <p class="mb-1 text-muted small">Selection Progress:</p>
+                    <h5 class="mb-0"><span id="selection-count" class="text-orange font-weight-bold">0</span> of <strong>{{ booking['NumberOfTickets'] }}</strong> seats selected</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seat Map Column -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header card-header-orange">
+                Select Your Seats (Live Inventory)
+            </div>
+            <div class="card-body p-4 text-center">
+                
+                <!-- Seat Legend -->
+                <div class="mb-4 pb-3 border-bottom text-center">
+                    <div class="legend-item">
+                        <div class="legend-box" style="border: 1px solid #ced4da; background-color: #fff;"></div>
+                        <span>Regular</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="border: 1px solid #0d6efd; background-color: #e7f1ff;"></div>
+                        <span>Premium (+20%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="border: 1px solid #198754; background-color: #e8f5e9;"></div>
+                        <span>Recliner (+50%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background-color: var(--held-color);"></div>
+                        <span>Held</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background-color: #e0e0e0; border: 1px solid #bdbdbd;"></div>
+                        <span>Booked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box bg-orange"></div>
+                        <span>Selected</span>
+                    </div>
+                </div>
+
+                <!-- Seat Grid Map -->
+                <div class="seat-map-container my-4">
+                    <div class="screen-indicator">
+                        <div class="screen-label">Screen This Way</div>
+                    </div>
+                    
+                    <div class="seat-map-grid" data-ticket-count="{{ booking['NumberOfTickets'] }}">
+                        {% for row_label, seat_list in seats_by_row.items() %}
+                        <div class="seat-row">
+                            <div class="row-label me-3">{{ row_label }}</div>
+                            {% for seat in seat_list %}
+                                <div class="seat {% if seat['SeatStatus'] == 'Available' %}available-{{ seat['SeatCategory'] }}{% else %}{{ seat['SeatStatus']|lower }}{% endif %}"
+                                     data-seat-number="{{ seat['SeatNumber'] }}"
+                                     title="Number: {{ seat['SeatNumber'] }} ({{ seat['SeatCategory'] }} - {{ seat['SeatStatus'] }})">
+                                    {{ seat['SeatNumber'][1:] }}
+                                </div>
+                            {% endfor %}
+                            <div class="row-label ms-3">{{ row_label }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Seat Form -->
+                <form action="{{ url_for('select_seats', booking_id=booking['BookingID']) }}" method="POST" id="seat-selection-form">
+                    <div id="selected-seats-input">
+                        <!-- Hidden inputs generated dynamically by JavaScript -->
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary me-md-2" onclick="return confirm('Cancel this booking request?');">Abandon Case</a>
+                        <button type="submit" id="submit-seats-btn" class="btn btn-secondary px-4" disabled>
+                            Hold & Proceed to Confirm <i class="fa-solid fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/seat_map.js') }}"></script>
+{% endblock %}

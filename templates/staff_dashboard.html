@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Dashboard - CineWave{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="text-orange font-weight-bold"><i class="fa-solid fa-list-check me-2"></i>Booking Worklist & Analytics</h2>
+        <p class="text-muted">Monitor and process CineWave ticket booking cases. Simulate SLA escalations and inspect status paths.</p>
+    </div>
+</div>
+
+<!-- Stats Dashboard Cards -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card shadow-sm border-0 bg-white text-center p-3 border-bottom border-3 border-info">
+            <span class="text-muted small text-uppercase">Total Cases</span>
+            <h3 class="mb-0 mt-1 font-weight-bold">{{ stats['total'] }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card shadow-sm border-0 bg-white text-center p-3 border-bottom border-3 border-primary">
+            <span class="text-muted small text-uppercase">Active Cases</span>
+            <h3 class="mb-0 mt-1 font-weight-bold text-primary">{{ stats['active'] }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card shadow-sm border-0 bg-white text-center p-3 border-bottom border-3 border-success">
+            <span class="text-muted small text-uppercase">Completed</span>
+            <h3 class="mb-0 mt-1 font-weight-bold text-success">{{ stats['completed'] }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card shadow-sm border-0 bg-white text-center p-3 border-bottom border-3 border-secondary">
+            <span class="text-muted small text-uppercase">Declined</span>
+            <h3 class="mb-0 mt-1 font-weight-bold text-secondary">{{ stats['declined'] }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card shadow-sm border-0 bg-white text-center p-3 border-bottom border-3 border-danger">
+            <span class="text-muted small text-uppercase">No Seats</span>
+            <h3 class="mb-0 mt-1 font-weight-bold text-danger">{{ stats['no_availability'] }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card shadow-sm border-0 bg-white text-center p-3 border-bottom border-3 border-danger">
+            <span class="text-muted small text-uppercase">Pay Failed</span>
+            <h3 class="mb-0 mt-1 font-weight-bold text-danger">{{ stats['payment_failed'] }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Worklist Table Card -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>Active Worklist Case Queue (Pega worklist simulation)</span>
+        <span class="badge bg-orange">{{ stats['active'] }} cases pending</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Case ID (pyID)</th>
+                        <th>Customer</th>
+                        <th>Movie Title</th>
+                        <th>Current Stage</th>
+                        <th>Status (pyStatusWork)</th>
+                        <th>Created Date</th>
+                        <th class="pe-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td class="ps-3 font-monospace fw-semibold">{{ booking['pyID'].split('-')[0].upper() }}</td>
+                        <td>{{ booking['FullName'] }}</td>
+                        <td class="fw-semibold text-orange">{{ booking['MovieTitle'] }}</td>
+                        <td>
+                            <span class="small fw-semibold">{{ booking['BookingStatus']|stage_name }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {{ booking['BookingStatus']|status_badge }}">{{ booking['BookingStatus'] }}</span>
+                        </td>
+                        <td class="small text-muted">{{ booking['CreatedDateTime'] }}</td>
+                        <td class="pe-3 text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('booking_final', booking_id=booking['pyID']) }}" class="btn btn-outline-dark" title="Open Case View">
+                                    <i class="fa-solid fa-folder-open"></i> View
+                                </a>
+                                
+                                {% if booking['BookingStatus'] == 'New' %}
+                                <a href="{{ url_for('select_seats', booking_id=booking['pyID']) }}" class="btn btn-orange text-white" title="Continue Booking">
+                                    Continue <i class="fa-solid fa-play ms-1"></i>
+                                </a>
+                                {% elif booking['BookingStatus'] == 'Pending-Availability' %}
+                                <a href="{{ url_for('select_seats', booking_id=booking['pyID']) }}" class="btn btn-orange text-white" title="Select Seats">
+                                    Select Seats <i class="fa-solid fa-chair ms-1"></i>
+                                </a>
+                                {% elif booking['BookingStatus'] == 'Pending-Confirmation' %}
+                                <a href="{{ url_for('confirm_booking', booking_id=booking['pyID']) }}" class="btn btn-warning text-dark" title="Confirm Booking">
+                                    Confirm <i class="fa-solid fa-circle-check ms-1"></i>
+                                </a>
+                                <form action="{{ url_for('trigger_manual_expiry', booking_id=booking['pyID']) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger" title="Expire Held Seats (30 min SLA)" onclick="return confirm('Expire hold and release seats?');">
+                                        <i class="fa-solid fa-clock"></i> Expire
+                                    </button>
+                                </form>
+                                {% elif booking['BookingStatus'] == 'Open-InProgress' %}
+                                <a href="{{ url_for('process_booking', booking_id=booking['pyID']) }}" class="btn btn-primary" title="Process Payment">
+                                    Process <i class="fa-solid fa-credit-card ms-1"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="fa-regular fa-folder-open fa-2x d-block mb-2"></i>No cases in system yet.
+                            <a href="{{ url_for('new_booking') }}" class="btn btn-orange btn-sm text-white mt-2">Create a case</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
