@@ -52,6 +52,7 @@ def get_booking_details(booking_id):
         conn.close()
         return None
     booking = dict(row)
+    booking["BookingID"] = booking["pyID"]
     
     # Get selected seats
     cur.execute("""
