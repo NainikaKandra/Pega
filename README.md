@@ -7,7 +7,7 @@ This application is a build-ready simulation of the **CineWave Movie Ticket Book
 
 ## 🔗 Live Public Demo Link
 Access the running application online from any device:
-👉 **[https://game-briefly-local-impact.trycloudflare.com](https://game-briefly-local-impact.trycloudflare.com)**
+👉 **[https://fixtures-tiles-cheese-horn.trycloudflare.com](https://fixtures-tiles-cheese-horn.trycloudflare.com)**
 
 *(Note: The demo link is actively served via a secure tunnel from the local development server).*
 
